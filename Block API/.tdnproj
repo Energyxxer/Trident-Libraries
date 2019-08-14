@@ -1,0 +1,14 @@
+{
+  "default-namespace": "blockapi",
+  "language-level": 1,
+  "datapack-output": "C:\\Users\\PC\\Trident\\out\\Block API",
+  "resources-output": "C:\\Users\\PC\\Trident\\out\\Block API-resources.zip",
+  "export-comments": true,
+  "strict-text-components": false,
+  "game-logger": {
+    "compact": false,
+    "timestamp-enabled": true,
+    "line-number-enabled": false,
+    "pos-enabled": true
+  }
+}

@@ -1,0 +1,22 @@
+@require blockapi:util
+@require blockapi:block_to_score
+
+var dataIndex = 0
+var currentState = null
+
+eval generateFunctionTree("blockapi:score_to_armor_stand_head", new int_range(0, BlockAPI.blockInfo.blockList.length), 4,
+        function(interval, next) {
+            if score deref ${BlockAPI.inputIdScore} matches $interval function $next
+        },
+        function(k) {
+            var entry = BlockAPI.blockInfo.blockList[k]
+            do if(entry.value.armorStandHead.omit == true) {
+                return
+            }
+            do if(entry.value.armorStandHead.override != null) {
+                eval BlockAPI.spawnArmorStandHead(entry.value.armorStandHead.override, ["if score " + BlockAPI.inputIdScore.target + " " + BlockAPI.inputIdScore.member + " matches " + k])
+            } else {
+                eval BlockAPI.spawnArmorStandHead(entry.value.itemForm, ["if score " + BlockAPI.inputIdScore.target + " " + BlockAPI.inputIdScore.member + " matches " + k])
+            }
+        }
+)

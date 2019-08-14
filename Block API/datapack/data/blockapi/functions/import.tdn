@@ -1,0 +1,121 @@
+@on compile
+@priority 1000
+var blockDefs = MinecraftTypes.getDefinitionsForCategory("block")
+
+define objective blkapi
+define objective blkapi_var
+
+define entity blockapi_pivot minecraft:area_effect_cloud {
+    default nbt {Duration:10000}
+    
+    ticking function {
+        scoreboard players add @s blkapi_var 1
+        set @s[scores={blkapi_var=2..}]->blkapi_var = 0
+        set @s.Air = @s->blkapi_var
+        set @s.Age = 0s
+    }
+}
+
+define entity blockapi_free_block minecraft:falling_block {
+    default nbt {Time:1, NoGravity:1b}
+    
+    ticking function {
+        data modify entity @s Time set value 1
+    }
+}
+
+define entity blockapi_stand_head minecraft:armor_stand {
+    default nbt {Marker:1b,NoGravity:1b,Invisible:1b,Pose:{Head:[0.0f,0.0f,0.0f]}}
+}
+
+global var BlockAPI = {
+    blockInfo: {
+        count: 0,
+        blocks: {},
+        blockList: []
+    },
+    outputIdScore: pointer<OUTPUT_ID->blkapi>,
+    outputDataScore: pointer<OUTPUT_DATA->blkapi>,
+    inputIdScore: pointer<INPUT_ID->blkapi>,
+    inputDataScore: pointer<INPUT_DATA->blkapi>,
+    blockToScore: function(idPtr, dataPtr, pos, modifiers) {
+        raw $modifiers positioned $pos function blockapi:block_to_score
+        raw $modifiers set $idPtr = ${BlockAPI.outputIdScore}
+        raw $modifiers set $dataPtr = ${BlockAPI.outputDataScore}
+    },
+    spawnFreeBlock: function(blk, modifiers) {
+        var blockNBT = nbt<{
+            Name: ${new tag_string((string) blk.blockType)}
+        }>
+        do if(blk.blockState != null) {
+            eval blockNBT = blockNBT.merge(nbt<{Properties: ${new nbt(blk.blockState)}}>)
+        }
+        raw $modifiers summon $blockapi_pivot ~ ~-0.375 ~ {
+            Passengers:[
+                ${
+                    blockapi_free_block
+                    .getSettingNBT()
+                    .merge(
+                        nbt<{
+                            BlockState: $blockNBT
+                        }>
+                    )
+                }
+            ]
+        }
+    },
+    spawnArmorStandHead: function(itm, modifiers) {
+        raw $modifiers summon $blockapi_stand_head ~ ~-1.3875 ~ {
+            ArmorItems:[{},{},{},${itm.getSlotNBT()}]
+        }
+    }
+}
+
+for(entry in blockDefs) {
+    eval BlockAPI.blockInfo.count++
+    var obj = {
+        properties: null,
+        fallingBlock: {
+            omit: false,
+            override: null
+        },
+        armorStandHead: {
+            omit: false,
+            override: null
+        },
+        armorStandHand: {
+            omit: false,
+            override: null
+        },
+        itemForm: null
+    }
+    do if(entry.value.properties != null) {
+        eval obj.properties = JSON.parse(entry.value.properties)
+    }
+    
+    switch(entry.key) {
+        case "minecraft:air":
+        case "minecraft:cave_air":
+        case "minecraft:void_air":
+            eval obj.fallingBlock.omit = true
+            eval obj.armorStandHead.omit = true
+            break
+        case "minecraft:water":
+            eval obj.fallingBlock.override = block<minecraft:blue_wool>
+            eval obj.armorStandHead.override = item<minecraft:blue_wool>
+            break
+        case "minecraft:lava":
+            eval obj.fallingBlock.override = block<minecraft:orange_wool>
+            eval obj.armorStandHead.override = item<minecraft:orange_wool>
+            break
+    }
+    
+    do if(Item.exists((resource)entry.key)) {
+        eval obj.itemForm = new item((resource) entry.key)
+    } else {
+        eval obj.armorStandHead.omit = true
+    }
+    
+    eval BlockAPI.blockInfo.blocks[entry.key] = obj
+}
+

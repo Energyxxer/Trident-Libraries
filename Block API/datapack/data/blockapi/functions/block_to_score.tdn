@@ -1,0 +1,63 @@
+@require blockapi:util
+
+var getIteratorList = function(obj) {
+    var list = []
+    for(a in obj) {
+        eval list.add(a)
+    }
+    return list
+}
+
+eval BlockAPI.blockInfo.blockList = getIteratorList(BlockAPI.blockInfo.blocks)
+
+var dataIndex = 0
+var currentState = null
+var permuteStates = function(blockType, properties, index) {
+    do if(index == null) {
+        eval index = 0
+        eval dataIndex = 0
+    }
+    for(state in properties[index].value) {
+        do if(index == 0) {
+            eval currentState = {}
+        }
+        eval currentState[properties[index].key] = state
+        do if(index+1 < properties.length) {
+            eval permuteStates(blockType, properties, index+1)
+        } else {
+            var matchBlock = new block((resource)blockType)
+            eval matchBlock.blockState = currentState
+            if block ~ ~ ~ $matchBlock set ${BlockAPI.outputDataScore} = $dataIndex
+        }
+        eval dataIndex++
+    }
+}
+
+eval generateFunctionTree("blockapi:block_to_score", new int_range(0, BlockAPI.blockInfo.blockList.length), 4,
+        function(interval, next) {
+            var rangeTag = new resource("#blockapi:" + ((string)interval).replace("..","_"))
+            
+            var blocks = []
+            
+            var i = 0
+            for(i = interval.min; i <= interval.max; i++) {
+                eval blocks.add(new resource(BlockAPI.blockInfo.blockList[i].key))
+            }
+            
+            eval Tags.createTag("block", rangeTag, blocks)
+            
+            if block ~ ~ ~ ${new block(rangeTag)} function $next
+        },
+        function(k) {
+            var entry = BlockAPI.blockInfo.blockList[k]
+            var matchBlock = new block((resource)entry.key)
+            if block ~ ~ ~ $matchBlock function {
+                set ${BlockAPI.outputIdScore} = $k
+                do if(entry.value.properties == null) {
+                    set ${BlockAPI.outputDataScore} = 0
+                } else {
+                    eval permuteStates(entry.key, getIteratorList(entry.value.properties))
+                }
+            }
+        }
+)

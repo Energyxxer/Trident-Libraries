@@ -1,0 +1,46 @@
+@require blockapi:util
+@require blockapi:block_to_score
+
+var dataIndex = 0
+var currentState = null
+var permuteStates = function(blockType, properties, index) {
+    do if(index == null) {
+        eval index = 0
+        eval dataIndex = 0
+    }
+    for(state in properties[index].value) {
+        do if(index == 0) {
+            eval currentState = {}
+        }
+        eval currentState[properties[index].key] = state
+        do if(index+1 < properties.length) {
+            eval permuteStates(blockType, properties, index+1)
+        } else {
+            var setBlock = new block((resource)blockType)
+            eval setBlock.blockState = currentState
+            eval BlockAPI.spawnFreeBlock(setBlock, ["if score " + BlockAPI.inputDataScore.target + " " + BlockAPI.inputDataScore.member + " matches " + dataIndex])
+        }
+        eval dataIndex++
+    }
+}
+
+eval generateFunctionTree("blockapi:score_to_falling_block", new int_range(0, BlockAPI.blockInfo.blockList.length), 4,
+        function(interval, next) {
+            if score deref ${BlockAPI.inputIdScore} matches $interval function $next
+        },
+        function(k) {
+            var entry = BlockAPI.blockInfo.blockList[k]
+            do if(entry.value.fallingBlock.omit == true) {
+                return
+            }
+            do if(entry.value.fallingBlock.override != null) {
+                eval BlockAPI.spawnFreeBlock(entry.value.fallingBlock.override, ["if score " + BlockAPI.inputIdScore.target + " " + BlockAPI.inputIdScore.member + " matches " + k])
+            } else do if(entry.value.properties == null) {
+                eval BlockAPI.spawnFreeBlock(new block((resource) entry.key), ["if score " + BlockAPI.inputIdScore.target + " " + BlockAPI.inputIdScore.member + " matches " + k])
+            } else {
+                if score deref ${BlockAPI.inputIdScore} matches $k function {
+                    eval permuteStates(entry.key, getIteratorList(entry.value.properties))
+                }
+            }
+        }
+)
