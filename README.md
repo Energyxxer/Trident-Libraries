@@ -1,4 +1,7 @@
-# Block API
+# Trident-Libraries
+by Energyxxer
+
+## Block API
 This Trident library allows you to turn any Minecraft block into a falling_block entity or an armor stand wearing an item, preserving the exact block ID and blockstate as the source. This is done by assigning a numeric ID on the scoreboard to every different type of block, and each blockstate it may have, which is obtained by running `blockapi:block_to_score` at the location of the block to capture.
 Those scores are then assigned to the pointers `${BlockAPI.outputIdScore}` and `${BlockAPI.outputDataScore}`.
 
